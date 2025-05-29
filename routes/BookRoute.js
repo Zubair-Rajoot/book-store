@@ -7,11 +7,14 @@ const authenticateToken = require('../middleware/authenticateToken');
 const isAdmin = require('../middleware/isAdmin');
 
 
-router.post('/create', authenticateToken, createBook);
-router.get('/all', authenticateToken, isAdmin, getBooks);
+router.post('/create',  authenticateToken, isAdmin, createBook);
 
-router.put('/update/:id',authenticateToken, updateBook);
-router.delete('/delete/:id', authenticateToken, deleteBook);
+router.get('/all', getBooks);
+
+router.put('/update/:id', updateBook);
+router.delete('/delete/:id', deleteBook);
+
+
 
 
 module.exports = router;

@@ -1,7 +1,7 @@
 const Book = require('../models/BookModel');
 
 
-//create a book 
+
 exports.createBook = async (req, res) => {
     try {
         const book = await Book.create({
@@ -16,7 +16,7 @@ exports.createBook = async (req, res) => {
         book
     });
     } catch (error) {
-        console.error("Error creating book:", error);
+       
         res.status(500).json({ message: "Internal server error" });
         
     }
@@ -24,22 +24,34 @@ exports.createBook = async (req, res) => {
 
 
 
-//get all books 
+
 exports.getBooks = async (req, res) => {
     try {
-        //   console.log('Fetching tasks for userId:', req.user?._id); 
-        // const books = await Book.find({ userId: req.user._id });
-         const books = await Book.find();
-        console.log("Books :", books);
-        res.status(200).json(books);
+      
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 5; 
+        
+        const startIndex = (page - 1) * limit;
+        
+        const totalBooks = await Book.countDocuments();
+        console.log("Total books:", totalBooks);
+        const books = await Book.find().skip(startIndex).limit(limit);
+        
+        console.log("Books retrieved:", books);
+        res.status(200).json({
+            books,
+            currentPage: page,
+            totalPages: Math.ceil(totalBooks / limit),
+            totalBooks
+        });
     } catch (error) {
-        console.error("Error retrieving books:", error);
+        
         res.status(500).json({ message: "Internal server error" });
     }
 }
 
 
-//update book 
+
 exports.updateBook = async (req, res) => {
      try {
     const book  = await Book.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -48,13 +60,13 @@ exports.updateBook = async (req, res) => {
     }
     res.json({ message: 'book update successfully', book });
   } catch (error) {
-    console.error('Error updating book:', error);
+    
     res.status(500).json({ message: 'Server error' });
   }
 }
 
 
-//delete book
+
 exports.deleteBook = async (req, res) => {
     try {
       const book = await Book.findByIdAndDelete(req.params.id);
@@ -63,7 +75,7 @@ exports.deleteBook = async (req, res) => {
       }
       res.json({ message: 'book deleted successfully' });
     } catch (error) {
-      console.error('Error deleting book :', error);
+      
       res.status(500).json({ message: 'Server error' });
     }
 };

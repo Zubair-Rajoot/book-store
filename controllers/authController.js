@@ -3,11 +3,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 
-//register user
+const JWT_SECRET = "zubi@123"; 
 exports.registerUser = async (req, res) => {
-    const { username, email, password } = req.body;
+    const { name, email, password } = req.body;
 
-    if (!username || !email || !password) {
+    if (!name || !email || !password) {
         return res.status(400).json({ message: "All fields are required." });
     }
 
@@ -22,7 +22,7 @@ exports.registerUser = async (req, res) => {
         
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        const user = new User({ username, email, password: hashedPassword });
+        const user = new User({ name, email, password: hashedPassword });
 
         await user.save();
         res.status(201).json({
@@ -37,25 +37,34 @@ exports.registerUser = async (req, res) => {
 };
 
 
-//login user
 exports.loginUser = async (req, res) => {
+    const { email, password } = req.body;
 
+    try {
+        const user = await User.findOne({ email });
 
-const { email, password } = req.body;
-const user = await User.findOne({ email });
-    
-    if (!user) return res.status(400).send("Username or password is wrong");
+        if (!user) return res.status(400).send("Username or password is wrong");
 
-    const validPass = await bcrypt.compare(password, user.password);
-    if (!validPass) return res.status(400).send("Invalid password");
+        const validPass = await bcrypt.compare(password, user.password);
+        if (!validPass) return res.status(400).send("Invalid password");
 
-    const token = jwt.sign(
-        { _id: user._id, email: user.email, password: user.password },
-        "secretKey",
-        { expiresIn: '1h' }
-    );
+        const token = jwt.sign(
+            { 
+                _id: user._id, 
+                email: user.email, 
+                isAdmin: user.isAdmin ? 'admin' : 'user'  
+            
+            },  
+            JWT_SECRET,
+            { expiresIn: '1h' }
+        );
 
-    res.json({ token });  
+        res.json({ token,
+            userId: user._id
+         });
 
+    } catch (error) {
+        
+        res.status(500).send("Server error");
+    }
 };
-
